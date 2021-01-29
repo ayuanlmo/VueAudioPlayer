@@ -126,32 +126,17 @@ export default {
   methods: {
     //点击列表播放
     audioPlayer(data,i){
-      console.log(i,this.thisState)
-
-
       if(this.thisState === i){
         return
       }
-      this.thisState = 2;//绑定状态
-
-
-
-      // alert(this.thisState)
-
-
-
-      // if(this.thisState < index){
-      //   this.$refs.audioList.scrollTop += 32;
-      // }
+      //控制滚动
+      this.thisState < i ? this.$refs.audioList.scrollTop += 33 : this.$refs.audioList.scrollTop -= 33;
+      this.thisState = i;
       this.audioConfig.thisTime = 0;
       this.audioConfig.config = data;//绑定数据
-
       if(this.audioConfig.config.lrc !== ''){
         this.getLyricTxt(this.audioConfig.config.lrc);//请求歌词
       }
-      //向下滚动
-
-
       //如果当前正在播放
       if(this.isPlayer){
         this.$refs.myAudio.pause();
@@ -159,35 +144,30 @@ export default {
           this.$refs.myAudio.play()
         },500)
       }
-      console.log(data)
     },
     sliderValueChange(event){
       this.audioConfig.thisPercent = parseInt(event * 100);
       const time = parseInt((event / 100 * this.audioConfig.duration) * 100);
       this.$refs.myAudio.currentTime  = time;
       this.audioConfig.thisTime = time;
-
       this.formatSeconds(this.audioConfig.thisTime);
       this.isPlayer ? this.$refs.myAudio.play() : this.$refs.myAudio.pause();
-      console.log('时间被拖拽.....',time,event,this.audioConfig.thisPercent);
     },
     //开始播放 & 暂停
     player(play) {
       if(this.audioList.length === 0){
-        console.log('无音乐...无法播放');
         return this.$emit('noAudio',true);//发送事件(无音乐，用于父组件接管状态)
       }
       if(!this.isOnLoad){
-        console.log('未加载完毕...无法播放...');
         return this.$emit('onPending',true);//发送事件(音频等待中，暂时无法播放，用于父组件接管状态)
       }
       this.isPlayer = play;
       if(play){
         this.openTimer(false)
-        this.$refs.myAudio.play()
+        this.$refs.myAudio.play();
       }else{
         this.openTimer(true)
-        this.$refs.myAudio.pause()
+        this.$refs.myAudio.pause();
       }
     },
     //打开定时器
@@ -203,7 +183,6 @@ export default {
           this.audioConfig.config.noLrc = true;
           this.audioConfig.config.noLrcInfo = '纯音乐，请欣赏';
         }
-
       }, 1000);
     },
     //播放完毕
@@ -212,7 +191,6 @@ export default {
       this.isPlayer = false;
       this.openTimer(true);//关闭定时器
       this.audioConfig.thisTime = 0;//清空当前时间
-      console.log('播完完毕');
     },
     //加载完毕
     audioOnLoad() {
@@ -220,7 +198,6 @@ export default {
       this.isOnLoad = true;//加载完毕，此时isOnLoad为true，当前可播放
       this.audioConfig.duration = parseInt(this.$refs.myAudio.duration);//设置总时间
       // this.audioConfig.thisPercent = 100;
-      console.log('加载完毕，总时间：', this.audioConfig.duration);
     },
     //获取当前时间对应的歌词
     getLyric(timer){
@@ -232,7 +209,6 @@ export default {
           if(this.audioConfig.lrcObj.ms[i].c !== '') {
             this.audioConfig.thisLrc = this.audioConfig.lrcObj.ms[i].c;
             this.$emit('currentLrcChange',this.audioConfig.lrcObj.ms[i].c)
-            console.log('歌词：', this.audioConfig.lrcObj.ms[i].c);
             break;
           }
         }
@@ -240,7 +216,6 @@ export default {
     },
     audioOnError(){
       this.$emit('audioOnError',true);//发送事件(音频加载失败，用于父组件接管状态)
-      console.log('音频加载失败...');
       this.isPlayer = false;//未播放
     },
     //时间更新
@@ -251,7 +226,6 @@ export default {
       //实时计算出当前播放进度
       this.audioConfig.thisPercent = parseInt(((percent * 100).toFixed(2))) + 1;
       this.$emit('thisPercentChange',this.audioConfig.thisPercent)
-      console.log(`播放中..... ${this.audioConfig.thisPercent} %`);
     },
     //时间转换 00:00
     formatSeconds(value) {
@@ -298,7 +272,6 @@ export default {
       //xhr.setRequestHeader("Content-Type", "text/html");
       xhr.onreadystatechange = () => {
         if (xhr.readyState == 4 && xhr.status == 200) {
-          console.log(xhr.responseText)
           this.audioConfig.lrc = xhr.responseText;
           const lrcs = this.audioConfig.lrc.split('\n');
           lrcs.forEach((item, i) => {
@@ -331,9 +304,9 @@ export default {
           this.audioConfig.lrcObj.ms.sort(function (a, b) {//排序
             return a.t - b.t;
           });
-          for (let i in this.audioConfig.lrcObj) { //查看解析结果
-            console.log(i, ":", this.audioConfig.lrcObj[i]);
-          }
+          // for (let i in this.audioConfig.lrcObj) { //查看解析结果
+          //   console.log(i, ":", this.audioConfig.lrcObj[i]);
+          // }
         }
       }
       xhr.send();
@@ -348,10 +321,6 @@ export default {
     const _this = this;
     xhr.onload = function(res){
       _this.audioList = JSON.parse(res.currentTarget.response)
-      console.log(_this.audioList);
-
-      console.log('0000000000000')
-
       _this.audioConfig.config = _this.audioList[0];//置第一首
     }
     xhr.send();
