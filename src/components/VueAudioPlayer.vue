@@ -86,15 +86,7 @@ export default {
   data() {
     return {
       listIsShow:true,
-      audioList:[
-        // {
-        //   url:'https://upcdn.ayuanlmo.online/audio/NaCho/HowAreU.mp3',//音频地址
-        //   pic:'//pic.xiami.net/images/album/img10/136444010/6927381501692738.jpg?x-oss-process=image/resize,limit_0,m_fill,s_390/quality,q_80/format,jpg',//音频图片地址
-        //   lrc:'https://upcdn.ayuanlmo.online/audio/NaCho/HowAreU.txt',//音频歌词文件地址
-        //   author:'NaCho',//音频作者
-        //   title:'HowAreU'//音频标题
-        // }
-      ],
+      audioList:[],
       isPlayer: false,//是否播放
       isOnLoad:false,//是否加载完毕
       audioData: {
@@ -111,6 +103,7 @@ export default {
         thisTime: 0,//当前播放时间
         lrc: '',//歌词文件
         thisLrc:'',//当前歌词
+        listMaxSort:0,//列表总长度
         lrcObj: {
           ti: "", //歌曲名
           ar: "", //演唱者
@@ -125,8 +118,8 @@ export default {
   },
   methods: {
     //点击列表播放
-    audioPlayer(data,i){
-      if(this.thisState === i){
+    audioPlayer(data,i,state = false){
+      if(state === false && this.thisState === i){
         return
       }
       //控制滚动
@@ -187,10 +180,12 @@ export default {
     },
     //播放完毕
     audioOnOver() {
+      this.audioConfig.thisPercent = 0;
       this.$emit('audioOnOver',true);//发送事件(播放完毕，用于父组件接管状态)
-      this.isPlayer = false;
-      this.openTimer(true);//关闭定时器
-      this.audioConfig.thisTime = 0;//清空当前时间
+      console.log('播放完毕...');
+      this.thisState < this.audioConfig.listMaxSort ? this.thisState +=1 : this.thisState -=1;//切歌
+      this.audioConfig.config = this.audioList[this.thisState-1];
+      this.audioPlayer(this.audioConfig.config,this.thisState,true)
     },
     //加载完毕
     audioOnLoad() {
@@ -225,6 +220,7 @@ export default {
       this.audioConfig.currentTime = parseInt(this.$refs.myAudio.currentTime)
       //实时计算出当前播放进度
       this.audioConfig.thisPercent = parseInt(((percent * 100).toFixed(2))) + 1;
+      console.log('时间',this.audioConfig.thisPercent)
       this.$emit('thisPercentChange',this.audioConfig.thisPercent)
     },
     //时间转换 00:00
@@ -253,14 +249,6 @@ export default {
     },
     //获取歌词
     getLyricTxt(url) {
-      // this.audioConfig.lrcObj: {
-      //   ti: "", //歌曲名
-      //       ar: "", //演唱者
-      //       al: "", //专辑名
-      //       by: "", //歌词制作人
-      //       offset: 0, //时间补偿值，单位毫秒，用于调整歌词整体位置
-      //       ms: [] //歌词数组{t:时间,c:歌词}
-      // },
       this.audioConfig.lrcObj.ti = '';
       this.audioConfig.lrcObj.al = '';
       this.audioConfig.lrcObj.by = '';
@@ -321,6 +309,7 @@ export default {
     const _this = this;
     xhr.onload = function(res){
       _this.audioList = JSON.parse(res.currentTarget.response)
+      _this.audioConfig.listMaxSort = _this.audioList.length;//设置列表长度
       _this.audioConfig.config = _this.audioList[0];//置第一首
     }
     xhr.send();

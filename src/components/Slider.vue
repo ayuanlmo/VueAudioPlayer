@@ -57,6 +57,8 @@ export default {
   },
   methods:{
     setValue(v){
+
+      console.log('变化',v)
       this.sliderValue = Math.min(1,Math.max(0,v));
     },
     mousedownHandler(event){
