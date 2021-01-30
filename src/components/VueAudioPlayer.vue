@@ -1,5 +1,5 @@
 <template>
-  <div class="app">
+  <div class="app" :style="!controllerIsShow ? 'width:72px;' : ''">
     <div class="audio-list" v-show="listIsShow" ref="audioList">
       <ul>
         <li @click="audioPlayer(item,index+1)" v-for="(item,index) in audioList" :key="index" :style="thisState === index+1 ? {background: '#e9e9e9'} : '' " class="list-item">
@@ -11,7 +11,7 @@
       </ul>
     </div>
     <div class="a-play">
-      <div class="a-play-left">
+      <div class="a-play-left" :style="!controllerIsShow ? `background-image: url(${audioConfig.config.pic});height:60px;` : `background-image: url(${audioConfig.config.pic});` ">
         <div class="" :class=" isPlayer ? 'a-l-play-activation' : 'a-l-play' ">
           <audio
               @canplay="audioOnLoad"
@@ -33,9 +33,8 @@
             <path d="M14.080 4.8q2.88 0 2.88 2.048v18.24q0 2.112-2.88 2.112t-2.88-2.112v-18.24q0-2.048 2.88-2.048zM2.88 4.8q2.88 0 2.88 2.048v18.24q0 2.112-2.88 2.112t-2.88-2.112v-18.24q0-2.048 2.88-2.048z"></path>
           </svg>
         </div>
-        <img draggable="false" :src="audioConfig.config.pic" alt="">
       </div>
-      <div class="a-play-right">
+      <div v-show="controllerIsShow" class="a-play-right">
         <div class="a-r-all">
           <p class="a-r-title">
             <span :title="audioConfig.config.title">{{audioConfig.config.title}}</span>
@@ -49,12 +48,6 @@
           <div class="audio-list-show" @click="listIsShow ? listIsShow = false : listIsShow = true">
             <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 22 32"><path d="M20.8 14.4q0.704 0 1.152 0.48t0.448 1.12-0.48 1.12-1.12 0.48h-19.2q-0.64 0-1.12-0.48t-0.48-1.12 0.448-1.12 1.152-0.48h19.2zM1.6 11.2q-0.64 0-1.12-0.48t-0.48-1.12 0.448-1.12 1.152-0.48h19.2q0.704 0 1.152 0.48t0.448 1.12-0.48 1.12-1.12 0.48h-19.2zM20.8 20.8q0.704 0 1.152 0.48t0.448 1.12-0.48 1.12-1.12 0.48h-19.2q-0.64 0-1.12-0.48t-0.48-1.12 0.448-1.12 1.152-0.48h19.2z"></path></svg>
           </div>
-          <!--右侧-上一首&暂停-下一首按钮-->
-          <div>
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
         </div>
         <div class="a-play-time percent">
           <div class="a-play-percent">
@@ -66,7 +59,34 @@
             <span> / </span>
             <span>{{ formatSeconds(audioConfig.duration) }}</span>
           </div>
+          <div class="play-type">
+            <!--随机播放-->
+            <svg @click="setPlayType('random')" v-show="playType === 'random'" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32"><path d="M22.667 4l7 6-7 6 7 6-7 6v-4h-3.653l-3.76-3.76 2.827-2.827 2.587 2.587h2v-8h-2l-12 12h-6v-4h4.347l12-12h3.653v-4zM2.667 8h6l3.76 3.76-2.827 2.827-2.587-2.587h-4.347v-4z"></path></svg>
+            <!--列表播放-->
+            <svg @click="setPlayType('ordinary')" v-show="playType === 'ordinary'" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32"><path d="M0.622 18.334h19.54v7.55l11.052-9.412-11.052-9.413v7.549h-19.54v3.725z"></path></svg>
+          </div>
+          <!--播放控制器-->
+          <div class="play-controller">
+            <!--上一首-->
+            <div @click="audioOnOver(1)">
+              <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32"><path d="M25.468 6.947c-0.326-0.172-0.724-0.151-1.030 0.057l-6.438 4.38v-3.553c0-0.371-0.205-0.71-0.532-0.884-0.326-0.172-0.724-0.151-1.030 0.057l-12 8.164c-0.274 0.186-0.438 0.496-0.438 0.827s0.164 0.641 0.438 0.827l12 8.168c0.169 0.115 0.365 0.174 0.562 0.174 0.16 0 0.321-0.038 0.468-0.116 0.327-0.173 0.532-0.514 0.532-0.884v-3.556l6.438 4.382c0.169 0.115 0.365 0.174 0.562 0.174 0.16 0 0.321-0.038 0.468-0.116 0.327-0.173 0.532-0.514 0.532-0.884v-16.333c0-0.371-0.205-0.71-0.532-0.884z"></path></svg>
+            </div>
+            <div>
+              <!--暂停-->
+              <svg @click="player(true)" v-if="!isPlayer" style="width:8px;" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 16 31"><path d="M15.552 15.168q0.448 0.32 0.448 0.832 0 0.448-0.448 0.768l-13.696 8.512q-0.768 0.512-1.312 0.192t-0.544-1.28v-16.448q0-0.96 0.544-1.28t1.312 0.192z"></path></svg>
+              <!--播放-->
+              <svg @click="player(false)" v-else style="width:8px;" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 17 32"><path d="M14.080 4.8q2.88 0 2.88 2.048v18.24q0 2.112-2.88 2.112t-2.88-2.112v-18.24q0-2.048 2.88-2.048zM2.88 4.8q2.88 0 2.88 2.048v18.24q0 2.112-2.88 2.112t-2.88-2.112v-18.24q0-2.048 2.88-2.048z"></path></svg>
+            </div>
+            <div @click="audioOnOver(0)">
+              <!--下一首-->
+              <svg style="transform: rotateY(180deg);" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32"><path d="M25.468 6.947c-0.326-0.172-0.724-0.151-1.030 0.057l-6.438 4.38v-3.553c0-0.371-0.205-0.71-0.532-0.884-0.326-0.172-0.724-0.151-1.030 0.057l-12 8.164c-0.274 0.186-0.438 0.496-0.438 0.827s0.164 0.641 0.438 0.827l12 8.168c0.169 0.115 0.365 0.174 0.562 0.174 0.16 0 0.321-0.038 0.468-0.116 0.327-0.173 0.532-0.514 0.532-0.884v-3.556l6.438 4.382c0.169 0.115 0.365 0.174 0.562 0.174 0.16 0 0.321-0.038 0.468-0.116 0.327-0.173 0.532-0.514 0.532-0.884v-16.333c0-0.371-0.205-0.71-0.532-0.884z"></path></svg>
+            </div>
+          </div>
+
         </div>
+      </div>
+      <div class="a-play-show" @click=" controllerIsShow ? controllerIsShow = false : controllerIsShow = true ">
+        <svg :class="controllerIsShow ? 'a-play-show-left' : ''" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32"><path d="M22 16l-10.105-10.6-1.895 1.987 8.211 8.613-8.211 8.612 1.895 1.988 8.211-8.613z"></path></svg>
       </div>
     </div>
 
@@ -75,13 +95,10 @@
 </template>
 
 <script>
-let timer = null;
 import slider from './Slider'
 export default {
   name: "VueAudioPlayer",
-  components:{
-    slider
-  },
+  components:{slider},
   props: {},
   data() {
     return {
@@ -114,6 +131,8 @@ export default {
         },
         config:{}
       },
+      playType:'ordinary',//播放模式--ordinary普通random随机
+      controllerIsShow:true,//显示控制器
     }
   },
   methods: {
@@ -130,14 +149,17 @@ export default {
       if(this.audioConfig.config.lrc !== ''){
         this.getLyricTxt(this.audioConfig.config.lrc);//请求歌词
       }
-      //如果当前正在播放
-      if(this.isPlayer){
-        this.$refs.myAudio.pause();
-        setTimeout(()=>{
-          this.$refs.myAudio.play()
-        },500)
-      }
+      setTimeout(()=>{
+        this.openTimer(true)
+        this.isPlayer = true;
+        this.player(true)//调用播放
+      },500);
     },
+    //设置播放模式
+    setPlayType(v){
+      v === 'ordinary' ? this.playType = 'random' : this.playType = 'ordinary'
+    },
+    //推动进度条
     sliderValueChange(event){
       this.audioConfig.thisPercent = parseInt(event * 100);
       const time = parseInt((event / 100 * this.audioConfig.duration) * 100);
@@ -145,6 +167,11 @@ export default {
       this.audioConfig.thisTime = time;
       this.formatSeconds(this.audioConfig.thisTime);
       this.isPlayer ? this.$refs.myAudio.play() : this.$refs.myAudio.pause();
+    },
+    //获取一个随机数
+    getRandomNumber(min,max){
+      const c = max - min + 1;
+      return Math.floor(Math.random() * c + min);
     },
     //开始播放 & 暂停
     player(play) {
@@ -169,7 +196,7 @@ export default {
         return clearInterval(window.audioTimer);
       }
       window.audioTimer = setInterval(() => {
-        this.audioConfig.thisTime === this.audioConfig.duration ? clearInterval(timer) : this.audioConfig.thisTime++;
+        this.audioConfig.thisTime === this.audioConfig.duration ? clearInterval(window.audioTimer) : this.audioConfig.thisTime++;
         if(this.audioConfig.config.lrc !== ''){
           this.getLyric(this.audioConfig.thisTime);
         }else{
@@ -179,13 +206,38 @@ export default {
       }, 1000);
     },
     //播放完毕
-    audioOnOver() {
+    audioOnOver(v) {
+      //v为1的时候，被上一首按钮调用，为0被下一首按钮调用
+
+      //audio自身会调用这个方法，上一首、下一首也会调用这个
       this.audioConfig.thisPercent = 0;
       this.$emit('audioOnOver',true);//发送事件(播放完毕，用于父组件接管状态)
       console.log('播放完毕...');
-      this.thisState < this.audioConfig.listMaxSort ? this.thisState +=1 : this.thisState -=1;//切歌
-      this.audioConfig.config = this.audioList[this.thisState-1];
-      this.audioPlayer(this.audioConfig.config,this.thisState,true)
+      if(this.playType === 'ordinary'){
+        if(this.thisState < this.audioConfig.listMaxSort){
+          if(v === 1){
+            //如果是在第一首就点击上一首按钮，则播放最后一首
+            if( this.thisState === 1){
+              this.thisState = this.audioList.length;
+              //滚动到最后一首
+              setTimeout(()=>{
+                this.$refs.audioList.scrollTop = this.$refs.audioList.scrollHeight;
+              },100);
+            }else{
+              this.thisState -= 1;
+            }
+          }else{
+            this.thisState += 1;
+          }
+        }else{
+          this.thisState -= 1;
+        }
+        this.audioConfig.config = this.audioList[ this.thisState-1 ];
+      }else{
+        this.thisState = this.getRandomNumber(0 , this.audioList.length) + 1;
+        this.audioConfig.config = this.audioList[ this.thisState - 1 ];
+      }
+      this.audioPlayer(this.audioConfig.config , this.thisState,true);
     },
     //加载完毕
     audioOnLoad() {
@@ -209,6 +261,7 @@ export default {
         }
       }
     },
+    //音频加载失败
     audioOnError(){
       this.$emit('audioOnError',true);//发送事件(音频加载失败，用于父组件接管状态)
       this.isPlayer = false;//未播放
@@ -320,6 +373,22 @@ export default {
     //this.getLyricTxt(this.audioData.testLrc);
 
   },
+  watch:{
+    //监听控制器时候显示
+    controllerIsShow(n){
+      console.log(n)
+
+      this.listIsShow = false;//隐藏掉列表
+
+      // if(n){
+      //
+      // }else{
+      //   console.log('隐藏')
+      //
+      // }
+
+    }
+  }
 }
 </script>
 
@@ -331,9 +400,9 @@ export default {
   background: #ffffff;
   position: absolute;
   bottom: 0;
+  border-radius: 4px;
   .audio-list{
     width: 100%;
-    background: #ffffff;
     z-index: 5;
     overflow-y: auto;
     border-bottom: 1px solid #e9e9e9;
@@ -392,11 +461,14 @@ export default {
     .a-play-left {
       position: relative;
       width: 70px;
-      height: 100%;
+      background-size: cover;
+      background-color: #409EFF;
 
       img {
         width: 100%;
         height: 100%;
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
       }
 
       .a-l-play {
@@ -421,6 +493,7 @@ export default {
         width: 20px;
         height: 20px;
         position: absolute;
+
         top: 75%;
         left: 75%;
         margin-top: -15px;
@@ -467,7 +540,7 @@ export default {
           width: 12px;
           height: 12px;
           position: relative;
-          right: 5px;
+          right: -5px;
           top: 2px;
         }
         .a-r-title{
@@ -489,11 +562,29 @@ export default {
         line-height: 25px;
         margin-left: 10px;
       }
+      .play-type{
+        width: 10px;
+        height: 10px;
+        position: relative;
+        top: 2px;
+        left: 5px;
+      }
+      .play-controller{
+        position: relative;
+        display: flex;
+        width: 45px;
+        left: 14px;
+        top: 4px;
+        svg {
+          width: 15px;
+          margin-right:4px;
+        }
+      }
 
       //进度条
       .a-play-time {
         .a-play-percent {
-          width: 55%;
+          width: 53%;
           height: 5px;
           background: #cdcdcd;
           border-radius: 10px;
@@ -509,21 +600,19 @@ export default {
           background: #91c7ff;
           border-radius: 10px;
         }
-
-        //小圆点
-        .a-play-thispercent {
-          width: 8px;
-          height: 8px;
-          background: #3697fc;
-          position: relative;
-          top: -1.5px;
-          left: -3px;
-          border-radius: 10px;
-
-          &:hover {
-            transform: scale(1.2);
-          }
-        }
+      }
+    }
+    .a-play-show{
+      width:18px;
+      background:#e1e1e1;
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+      svg{
+        position: relative;
+        top:40%;
+      }
+      .a-play-show-left{
+        transform: rotateY(180deg);
       }
     }
   }

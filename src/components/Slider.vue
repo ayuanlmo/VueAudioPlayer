@@ -49,7 +49,6 @@ export default {
     },
     num(){
       this.setValue(this.num / 100)
-      console.log('进度条动态变化...',this.num);
     }
   },
   mounted(){
@@ -57,8 +56,6 @@ export default {
   },
   methods:{
     setValue(v){
-
-      console.log('变化',v)
       this.sliderValue = Math.min(1,Math.max(0,v));
     },
     mousedownHandler(event){
@@ -134,12 +131,16 @@ export default {
     &:before{
       content: '';
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 6px;
+      height: 6px;
       background-color: #FFF;
       border-radius: 50%;
       box-shadow: 0px 0px 4px #4e4e4e;
-      transform: translate(-7px,0px);
+      transform: translate(-7px, 0px);
+      right: -7px;
+    }
+    &:hover{
+      transform: scale(1.2);
     }
   }
   .mslider-key.hidden{
