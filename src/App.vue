@@ -19,13 +19,15 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: absolute;
+  bottom: 0;
 }
 *{
   padding: 0;
   margin: 0;
 }
 body{
-  background:#000000;
+  background:#ffffff;
 
   -moz-user-select: none;
   -webkit-user-select: none;

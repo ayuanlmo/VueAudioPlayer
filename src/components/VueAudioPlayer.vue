@@ -1,6 +1,6 @@
 <template>
   <div class="app" :style="!controllerIsShow ? 'width:72px;' : ''">
-    <div class="audio-list" v-show="listIsShow" ref="audioList">
+    <div :class=" listIsShow ? 'audio-list-show audio-list' : 'audio-list'" :style="!controllerIsShow ? 'display:none;' : '' "  ref="audioList">
       <ul>
         <li @click="audioPlayer(item,index+1)" v-for="(item,index) in audioList" :key="index" :style="thisState === index+1 ? {background: '#e9e9e9'} : '' " class="list-item">
           <span class="list-item-cur" :style="thisState === index +1 ? {background:'#3697fc'} : ''"></span>
@@ -89,6 +89,14 @@
         <svg :class="controllerIsShow ? 'a-play-show-left' : ''" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32"><path d="M22 16l-10.105-10.6-1.895 1.987 8.211 8.613-8.211 8.612 1.895 1.988 8.211-8.613z"></path></svg>
       </div>
     </div>
+    <div ref="aPlayLrc" class="a-play-lrc" v-if="!audioConfig.config.noLrc">
+      <!--渲染歌词-->
+      <p v-show="lrcItem.c!==''" :style=" audioConfig.thisLrc === lrcItem.c ? 'opacity: 1;' : ''" v-for="(lrcItem) in audioConfig.lrcObj.ms" :key="lrcItem.t"> {{lrcItem.c}}</p>
+
+    </div>
+    <div class="a-play-lrc" v-else>
+      <p style="opacity: 1;">{{audioConfig.config.noLrcInfo}}</p>
+    </div>
 
     <!--    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32"><path d="M25.468 6.947c-0.326-0.172-0.724-0.151-1.030 0.057l-6.438 4.38v-3.553c0-0.371-0.205-0.71-0.532-0.884-0.326-0.172-0.724-0.151-1.030 0.057l-12 8.164c-0.274 0.186-0.438 0.496-0.438 0.827s0.164 0.641 0.438 0.827l12 8.168c0.169 0.115 0.365 0.174 0.562 0.174 0.16 0 0.321-0.038 0.468-0.116 0.327-0.173 0.532-0.514 0.532-0.884v-3.556l6.438 4.382c0.169 0.115 0.365 0.174 0.562 0.174 0.16 0 0.321-0.038 0.468-0.116 0.327-0.173 0.532-0.514 0.532-0.884v-16.333c0-0.371-0.205-0.71-0.532-0.884z"></path></svg>-->
   </div>
@@ -106,11 +114,6 @@ export default {
       audioList:[],
       isPlayer: false,//是否播放
       isOnLoad:false,//是否加载完毕
-      audioData: {
-        testUrl: 'https://upcdn.ayuanlmo.online/audio/NaCho/HowAreU.mp3',
-        testLrc: 'https://upcdn.ayuanlmo.online/audio/NaCho/HowAreU.txt',
-        testImgUrl: '//pic.xiami.net/images/album/img10/136444010/6927381501692738.jpg?x-oss-process=image/resize,limit_0,m_fill,s_390/quality,q_80/format,jpg'
-      },
       //当前选中状态
       thisState:1,
       audioConfig: {
@@ -129,7 +132,10 @@ export default {
           offset: 0, //时间补偿值，单位毫秒，用于调整歌词整体位置
           ms: [] //歌词数组{t:时间,c:歌词}
         },
-        config:{}
+        config:{
+          noLrc:true,//歌词时候存在
+          noLrcInfo : '纯音乐，请欣赏',//没有歌词的时候展示
+        }
       },
       playType:'ordinary',//播放模式--ordinary普通random随机
       controllerIsShow:true,//显示控制器
@@ -345,6 +351,7 @@ export default {
           this.audioConfig.lrcObj.ms.sort(function (a, b) {//排序
             return a.t - b.t;
           });
+
           // for (let i in this.audioConfig.lrcObj) { //查看解析结果
           //   console.log(i, ":", this.audioConfig.lrcObj[i]);
           // }
@@ -363,7 +370,9 @@ export default {
     xhr.onload = function(res){
       _this.audioList = JSON.parse(res.currentTarget.response)
       _this.audioConfig.listMaxSort = _this.audioList.length;//设置列表长度
-      _this.audioConfig.config = _this.audioList[0];//置第一首
+      _this.audioConfig.config = _this.audioList[1];//置第一首
+      _this.thisState = 2;//到第二首
+      _this.getLyricTxt(_this.audioConfig.config.lrc);//请求歌词
     }
     xhr.send();
     //模拟 end## ...
@@ -375,19 +384,20 @@ export default {
   },
   watch:{
     //监听控制器时候显示
-    controllerIsShow(n){
-      console.log(n)
-
+    controllerIsShow(){
       this.listIsShow = false;//隐藏掉列表
+    },
+    'audioConfig.thisLrc':{
+      deep:true,
+      handler:function(){
+        setTimeout(()=>{
+          this.$refs.aPlayLrc.scrollTop +=20;
+        },100)
 
-      // if(n){
-      //
-      // }else{
-      //   console.log('隐藏')
-      //
-      // }
-
+      console.log('变化')
+      }
     }
+    //audioConfig.thisLrc
   }
 }
 </script>
@@ -398,10 +408,9 @@ export default {
   width: 425px;
   height: auto;
   background: #ffffff;
-  position: absolute;
-  bottom: 0;
   border-radius: 4px;
   .audio-list{
+    transition: all 0.4s ease 0s;
     width: 100%;
     z-index: 5;
     overflow-y: auto;
@@ -454,6 +463,9 @@ export default {
       -moz-border-radius: 2em;
     }
 
+  }
+  .audio-list-show{
+    max-height: 0px;
   }
 
   .a-play{
@@ -616,9 +628,30 @@ export default {
       }
     }
   }
+
+  .a-play-lrc{
+    color: #666565;
+    width: 100%;
+    z-index: -1;
+    text-align: center;
+    height: 45px;
+    position: fixed;
+    bottom: 0;
+    //background: #ffffff;
+    right: 0;
+    overflow-y: hidden;
+    overflow: hidden;
+    font-weight: 700;
+    font-size: 12px;
+    p{
+      height:20px;
+      line-height:20px;
+      opacity: .5;
+    }
+  }
 }
 
 svg {
-  cursor: pointer;
+cursor: pointer;
 }
 </style>
