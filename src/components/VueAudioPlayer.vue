@@ -107,15 +107,41 @@ import slider from './Slider'
 export default {
   name: "VueAudioPlayer",
   components:{slider},
-  props: {},
+  props: {
+    //是否自动播放
+    isAutoPlayer:{
+      type:Boolean,
+      default:false,
+    },
+    //列表
+    audioList:{
+      type:Array,
+      default: null
+    },
+    //播放模式
+    playType:{
+      type:String,
+      default:'ordinary'
+    },
+    //是否显示控制器
+    controllerIsShow:{
+      type:Boolean,
+      default:false
+    },
+    //配置文件
+    ayConfig:{
+      type:Object,
+      default:null
+    }
+  },
   data() {
     return {
-      listIsShow:true,
-      audioList:[],
+      listIsShow:true,//列表是否显示
+      //audioList:[],
       isPlayer: false,//是否播放
       isOnLoad:false,//是否加载完毕
-      //当前选中状态
-      thisState:1,
+      thisState:1,//当前选中状态
+      //isAutoPlayer:false,//是否自动播放
       audioConfig: {
         duration: 0,//总时间
         currentTime: 0,//当前时间
@@ -133,12 +159,12 @@ export default {
           ms: [] //歌词数组{t:时间,c:歌词}
         },
         config:{
-          noLrc:true,//歌词时候存在
+          noLrc:true,//歌词是否存在
           noLrcInfo : '纯音乐，请欣赏',//没有歌词的时候展示
         }
       },
-      playType:'ordinary',//播放模式--ordinary普通random随机
-      controllerIsShow:true,//显示控制器
+      //playType:'ordinary',//播放模式--ordinary普通||random随机
+      //controllerIsShow:true,//显示控制器
     }
   },
   methods: {
@@ -167,8 +193,8 @@ export default {
     },
     //推动进度条
     sliderValueChange(event){
-      this.audioConfig.thisPercent = parseInt(event * 100);
-      const time = parseInt((event / 100 * this.audioConfig.duration) * 100);
+      this.audioConfig.thisPercent = event * 100;
+      const time = (event / 100 * this.audioConfig.duration) * 100;
       this.$refs.myAudio.currentTime  = time;
       this.audioConfig.thisTime = time;
       this.formatSeconds(this.audioConfig.thisTime);
@@ -189,10 +215,10 @@ export default {
       }
       this.isPlayer = play;
       if(play){
-        this.openTimer(false)
+        this.openTimer(false);
         this.$refs.myAudio.play();
       }else{
-        this.openTimer(true)
+        this.openTimer(true);
         this.$refs.myAudio.pause();
       }
     },
@@ -276,11 +302,11 @@ export default {
     audioTimeUpdate() {
       //获取时间比例
       const percent = this.audioConfig.currentTime / this.audioConfig.duration;
-      this.audioConfig.currentTime = parseInt(this.$refs.myAudio.currentTime)
+      this.audioConfig.currentTime = parseInt(this.$refs.myAudio.currentTime);
       //实时计算出当前播放进度
       this.audioConfig.thisPercent = parseInt(((percent * 100).toFixed(2))) + 1;
-      console.log('时间',this.audioConfig.thisPercent)
-      this.$emit('thisPercentChange',this.audioConfig.thisPercent)
+      console.log('时间',this.audioConfig.thisPercent);
+      this.$emit('thisPercentChange',this.audioConfig.thisPercent);
     },
     //时间转换 00:00
     formatSeconds(value) {
@@ -318,7 +344,7 @@ export default {
       xhr.open('get', encodeURI(url));
       //xhr.setRequestHeader("Content-Type", "text/html");
       xhr.onreadystatechange = () => {
-        if (xhr.readyState == 4 && xhr.status == 200) {
+        if (xhr.readyState === 4 && xhr.status === 200) {
           this.audioConfig.lrc = xhr.responseText;
           const lrcs = this.audioConfig.lrc.split('\n');
           lrcs.forEach((item, i) => {
@@ -327,7 +353,7 @@ export default {
             const s = t.split(":");
             if (isNaN(parseInt(s[0]))) {
               for (let i in this.audioConfig.lrcObj) {
-                if (i != "ms" && i == s[0].toLowerCase()) {
+                if (i !== "ms" && i === s[0].toLowerCase()) {
                   this.audioConfig.lrcObj[i] = s[1];
                 }
               }
@@ -351,6 +377,7 @@ export default {
           this.audioConfig.lrcObj.ms.sort(function (a, b) {//排序
             return a.t - b.t;
           });
+          console.log(this.audioConfig.lrcObj)
 
           // for (let i in this.audioConfig.lrcObj) { //查看解析结果
           //   console.log(i, ":", this.audioConfig.lrcObj[i]);
@@ -384,17 +411,15 @@ export default {
   },
   watch:{
     //监听控制器时候显示
-    controllerIsShow(){
-      this.listIsShow = false;//隐藏掉列表
-    },
+    // controllerIsShow(){
+    //   this.listIsShow = false;//隐藏掉列表
+    // },
     'audioConfig.thisLrc':{
       deep:true,
       handler:function(){
         setTimeout(()=>{
           this.$refs.aPlayLrc.scrollTop +=20;
-        },100)
-
-      console.log('变化')
+        },100);
       }
     }
     //audioConfig.thisLrc
@@ -416,6 +441,7 @@ export default {
     overflow-y: auto;
     border-bottom: 1px solid #e9e9e9;
     max-height: 231px;
+    border-radius:4px;
     //max-height: 330px;
     .list-item{
       cursor: pointer;
